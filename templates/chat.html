@@ -53,7 +53,14 @@
                 <a href="/logout" class="btn btn-outline-danger">Logout</a>
             </div>
 
-            <div class="chat-box" id="chat-box"></div>
+            <div class="chat-box" id="chat-box">
+                {% for m in messages %}
+                    <div class="msg {{ 'msg-sent' if m.sender == current_user.username else 'msg-received' }}">
+                        <b>{{ m.sender }}</b>: {{ m.content }} <br>
+                        <span class="timestamp">{{ m.timestamp.strftime('%H:%M:%S') }}</span>
+                    </div>
+                {% endfor %}
+            </div>
 
             <div class="d-flex mt-3">
                 <input type="text" id="msg" class="form-control me-2" placeholder="Type your message" required>
@@ -78,23 +85,27 @@
 <!-- Socket.IO -->
 <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
 <script>
+    // Connect to server
     var socket = io();
 
+    // Send message to server
     function sendMessage() {
-        let msg = document.getElementById('msg').value;
-        if(msg.trim() !== '') {
+        let msgInput = document.getElementById('msg');
+        let msg = msgInput.value.trim();
+        if(msg !== '') {
             socket.emit('send_message', { message: msg });
-            document.getElementById('msg').value = '';
+            msgInput.value = ''; // clear input
         }
     }
 
+    // Receive message from server
     socket.on('receive_message', function(data){
         let chatBox = document.getElementById('chat-box');
         let div = document.createElement('div');
         div.className = 'msg ' + (data.sender === "{{ current_user.username }}" ? 'msg-sent' : 'msg-received');
         div.innerHTML = `<b>${data.sender}</b>: ${data.content} <br><span class="timestamp">${data.timestamp}</span>`;
         chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        chatBox.scrollTop = chatBox.scrollHeight; // auto-scroll
     });
 </script>
 </body>
