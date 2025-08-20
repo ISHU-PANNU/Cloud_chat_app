@@ -78,10 +78,8 @@
 <!-- Socket.IO -->
 <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
 <script>
-    // Connect to server
     var socket = io();
 
-    // Send message to server
     function sendMessage() {
         let msg = document.getElementById('msg').value;
         if(msg.trim() !== '') {
@@ -90,14 +88,13 @@
         }
     }
 
-    // Receive message from server
     socket.on('receive_message', function(data){
         let chatBox = document.getElementById('chat-box');
         let div = document.createElement('div');
         div.className = 'msg ' + (data.sender === "{{ current_user.username }}" ? 'msg-sent' : 'msg-received');
         div.innerHTML = `<b>${data.sender}</b>: ${data.content} <br><span class="timestamp">${data.timestamp}</span>`;
         chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight; // auto-scroll
+        chatBox.scrollTop = chatBox.scrollHeight;
     });
 </script>
 </body>
