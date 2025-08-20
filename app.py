@@ -96,3 +96,7 @@ if __name__ == '__main__':
         db.create_all()
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
 
+@app.route('/create-db')
+def create_db():
+    db.create_all()  # This creates all tables defined in your models
+    return "Database tables created!"
