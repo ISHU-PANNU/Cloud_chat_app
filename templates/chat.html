@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat - Cloud Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .msg {
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%;
+        }
+        .msg-sent {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+        }
+        .msg-received {
+            background: #e9ecef;
+            color: black;
+            margin-right: auto;
+        }
+        .timestamp {
+            font-size: 0.75em;
+            color: gray;
+        }
+        .sidebar {
+            border-left: 1px solid #dee2e6;
+            padding-left: 10px;
+        }
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Chat Area -->
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3>Welcome, {{ current_user.username }}</h3>
+                <a href="/logout" class="btn btn-outline-danger">Logout</a>
+            </div>
+
+            <div class="chat-box" id="chat-box"></div>
+
+            <div class="d-flex mt-3">
+                <input type="text" id="msg" class="form-control me-2" placeholder="Type your message" required>
+                <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+        <!-- Online Users -->
+        <div class="col-md-4 sidebar">
+            <h5>Online Users</h5>
+            <ul class="list-unstyled">
+                {% for u in users %}
+                    <li>
+                        <img src="{{ u.avatar }}" class="avatar"> {{ u.username }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Socket.IO -->
+<script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+<script>
+    // Connect to server
+    var socket = io();
+
+    // Send message to server
+    function sendMessage() {
+        let msg = document.getElementById('msg').value;
+        if(msg.trim() !== '') {
+            socket.emit('send_message', { message: msg });
+            document.getElementById('msg').value = '';
+        }
+    }
+
+    // Receive message from server
+    socket.on('receive_message', function(data){
+        let chatBox = document.getElementById('chat-box');
+        let div = document.createElement('div');
+        div.className = 'msg ' + (data.sender === "{{ current_user.username }}" ? 'msg-sent' : 'msg-received');
+        div.innerHTML = `<b>${data.sender}</b>: ${data.content} <br><span class="timestamp">${data.timestamp}</span>`;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight; // auto-scroll
+    });
+</script>
+</body>
+</html>
