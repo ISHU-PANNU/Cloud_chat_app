@@ -9,6 +9,7 @@ import random
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secretkey123'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chat.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -79,24 +80,19 @@ def logout():
 # ---------------- SOCKET EVENTS ----------------
 @socketio.on('send_message')
 def handle_send_message(data):
-    # Save message in DB
     new_msg = Message(sender=current_user.username, content=data['message'])
     db.session.add(new_msg)
     db.session.commit()
-    # Broadcast message to all connected clients
     emit('receive_message', {
         'sender': new_msg.sender,
         'content': new_msg.content,
         'timestamp': new_msg.timestamp.strftime('%H:%M:%S')
     }, broadcast=True)
 
+# ---------------- CREATE TABLES ON START ----------------
+with app.app_context():
+    db.create_all()  # Automatically create tables if they don't exist
+
 # ---------------- MAIN ----------------
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
-
-@app.route('/create-db')
-def create_db():
-    db.create_all()  # This creates all tables defined in your models
-    return "Database tables created!"
